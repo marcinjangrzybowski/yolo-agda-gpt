@@ -1,5 +1,5 @@
 You will help me write some Agda expression of specified type! 
-
+assume that we are using agda standard-library! do not use cubicla-agda specific definitions!
 
 term should be in following context:
 {placeholder1}
