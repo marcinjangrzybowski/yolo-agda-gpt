@@ -7,47 +7,31 @@ open import Reflection.AST.DeBruijn
 
 open import Data.Unit
 open import Data.Nat
+open import Data.Nat.Properties
 open import Data.Product
 open import Data.String as S
 open import Data.List as L
 
-open import Relation.Binary.PropositionalEquality.Core
-  using (_≡_; _≢_; refl; cong)
-
+open import Relation.Binary.PropositionalEquality
+  -- using (_≡_; refl; sym; cong; module ≡-Reasoning)
+  
 exeName : String
 exeName = "python3"
-
-mapM : ∀ {ℓ ℓ'} {A : Set ℓ} {B : Set ℓ'} → (A → TC B) → List A → TC (List B)
-mapM x [] = pure []
-mapM x (x₁ ∷ x₂) = do
- x₁' ← x x₁
- x₂' ← mapM x x₂
- pure (x₁' ∷ x₂')
-
--- prettyCtxPart : Σ String (λ _ → Arg Type) → TC String
--- prettyCtxPart (x , arg _ y) = do
---   y' ← formatErrorParts [ termErr y ]
---   pure ("\n" S.++ x S.++ " : " S.++ y') 
-
+  
 prettyCtx : ℕ → List (Σ String (λ _ → Arg Type)) → TC String
 prettyCtx k [] = pure " "
 prettyCtx k ((s , (arg _ x)) ∷ xs) = do
-  x' ← formatErrorParts [ termErr (weaken k x) ]
+  x' ← formatErrorParts L.[ termErr (weaken k x) ]
   xs' ← prettyCtx (suc k) xs
   pure ("\n" S.++ s S.++ " : " S.++ x' S.++ "\n\n" S.++ xs') 
  
-
--- do
---  c ← getContext
---  l ← mapM prettyCtxPart c
---  pure (S.concat l)
- 
+   
 
 macro
  yolo! : Term → Term → TC ⊤
  yolo! hoTy hole = do
   -- hoTy ← inferType hole
-  holeString ← formatErrorParts [ termErr hoTy ]
+  holeString ← formatErrorParts L.[ termErr hoTy ]
   ctx ← getContext
   ctxString ← prettyCtx 1 (ctx)
   gptResult ← runCmdTC (cmdSpec exeName
@@ -58,10 +42,61 @@ macro
   checked ←
    catchTC
     (checkFromStringTC gptResult hoTy)
-      (typeError ((strErr ctxString) ∷ [ strErr gptResult ]))
+      (typeError ((strErr ctxString) ∷ L.[ strErr gptResult ]))
   unify checked hole
 
+open ≡-Reasoning
+
+test1 : (x y z : ℕ) → x + y + z ≡ z + y + x 
+test1 x y z =
+   yolo! (x + y + z ≡ z + y + x)
 
 
-test1 : (A B C : Set) → (f : A → B) (g : B → C) → A → C 
-test1 A B C f g a = yolo! C
+
+-- trans (+-assoc x y z)
+  --     (trans
+  --        (cong (λ n → x + n) (+-comm y z))
+  --        (trans
+  --           (sym (+-assoc x z y))
+  --           (trans
+  --              (cong (λ n → n + y) (+-comm x z))
+  --              (trans
+  --                 (+-assoc z x y)
+  --                 (trans
+  --                    (cong (λ n → z + n) (+-comm x y))
+  --                       (sym (+-assoc z y x)))))))            
+
+-- yolo! (x + y + z ≡ z + y + x)
+--   -- begin
+--   --    x + y + z
+--   --  ≡⟨ {!+-comm x (y + z)!} ⟩ -- +-comm x (y + z)
+--   --    y + z + x
+--   --  ≡⟨ +-assoc y z x ⟩
+--   --    y + (z + x)
+--   --  ≡⟨ +-comm y (z + x) ⟩
+--   --    z + x + y
+--   --  ≡⟨ +-assoc z x y ⟩
+--   --    z + (x + y)
+--   --  ≡⟨ {!+-comm (x + y) z!} ⟩ --  +-comm (x + y) z
+--   --    z + y + x
+--   --  ∎
+    
+
+-- test1' : (x y z : ℕ) → x + (y + z) ≡ z + y + x 
+-- test1' x y z =
+--    begin
+--      (x + (y + z))
+--    ≡⟨ +-comm x (y + z) ⟩ -- +-comm x (y + z)
+--      (y + z + x)
+--    ≡⟨ +-assoc y z x ⟩
+--      (y + (z + x))
+--    ≡⟨ +-comm y (z + x) ⟩
+--      (z + x + y)
+--    ≡⟨ +-assoc z x y ⟩
+--      (z + (x + y))
+--    ≡⟨ cong (z +_) (+-comm x y) ⟩
+--      (z + (y + x))
+--    ≡⟨ sym (+-assoc z y x) ⟩ -- +-assoc z y x
+--      (z + y + x)
+--    ∎
+
