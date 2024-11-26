@@ -1,7 +1,12 @@
 from openai import OpenAI
 
-client = OpenAI()
+# Store your OpenAI API key here
+API_KEY = ??
+
+
+client = OpenAI(api_key=API_KEY)
 import sys
+
 
 def main():
     if len(sys.argv) != 4:
@@ -12,6 +17,8 @@ def main():
     template_file = sys.argv[1]
     placeholder1 = sys.argv[2]
     placeholder2 = sys.argv[3]
+
+    # Set the API key
 
     # Read the template from the file
     try:

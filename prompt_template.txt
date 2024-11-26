@@ -1,1 +1,10 @@
-What is the sum of {placeholder1} and {placeholder2} ?
+You will help me write some Agda expression of specified type! 
+
+
+term should be in following context:
+{placeholder1}
+
+and it shoould be of type:
+{placeholder2}
+
+Please, respond ONLY with the term itself, without any other comment!
