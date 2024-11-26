@@ -1,4 +1,6 @@
-import openai
+from openai import OpenAI
+
+client = OpenAI()
 import sys
 
 def main():
@@ -24,12 +26,10 @@ def main():
 
     # Call the OpenAI API
     try:
-        response = openai.ChatCompletion.create(
-            model="gpt-4",
-            messages=[{"role": "user", "content": prompt}]
-        )
+        response = client.chat.completions.create(model="gpt-4",
+        messages=[{"role": "user", "content": prompt}])
         # Print the response content
-        print(response['choices'][0]['message']['content'])
+        print(response.choices[0].message.content)
     except Exception as e:
         print(f"Error calling OpenAI API: {e}")
         sys.exit(1)
