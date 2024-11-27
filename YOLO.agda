@@ -2,6 +2,7 @@
 module YOLO where
 
 open import Reflection
+open import Agda.Builtin.Reflection using (formatErrorParts; checkFromStringTC)
 open import Reflection.External
 open import Reflection.AST.DeBruijn
 
@@ -20,6 +21,11 @@ open import Relation.Binary.PropositionalEquality
 exeName : String
 exeName = "python3"
 
+-- vvvvvvvvvvvvvvvvvvvvvvv !!! EDIT THESE FILE NAMES !!! vvvvvvvvvvvvvvvvvvvvvvvvvvv --
+wrapperName = "/home/williamdemeo/git/AI/PROJECTS/aimxxxix/yolo-agda-gpt/wrapper.py"
+promptTemplate = "/home/williamdemeo/git/AI/PROJECTS/aimxxxix/yolo-agda-gpt/prompt_template.txt"
+promptFailTemplate = "/home/williamdemeo/git/AI/PROJECTS/aimxxxix/yolo-agda-gpt/prompt_template_on_fail.txt"
+
 _<$>_ : ∀ {ℓ ℓ'} {A : Set ℓ} {B : Set ℓ'} → (f : A → B) → TC A → TC B
 f <$> m = do m' ← m ; pure (f m')
 
@@ -28,7 +34,6 @@ wait-for-term-clauses : List (Clause) → TC (List Clause)
 wait-for-term-clause : Clause → TC Clause
 wait-for-term : Term → TC Term
 wait-for-term-telescope : List (Σ String (λ _ → Arg Type)) → TC (List (Σ String (λ _ → Arg Type)))
-
 
 wait-for-term (var x args) = var x <$> wait-for-term-args args
 wait-for-term (con c args) = con c <$> wait-for-term-args args
@@ -53,7 +58,6 @@ wait-for-term-args (arg i a ∷ xs) = do
   a' ← (arg i <$> wait-for-term a)
   pure (a' L.∷ xs')
 
-
 wait-for-term-clause (Clause.clause tel ps t) = do
  tel' ← (wait-for-term-telescope tel)
  t' ← (wait-for-term t)
@@ -75,10 +79,6 @@ wait-for-term-clauses (x ∷ xs) = do
   xs' ← wait-for-term-clauses xs
   pure (x' L.∷ xs')
 
-
-
-
-
 prettyCtx : ℕ → List (Σ String (λ _ → Arg Type)) → TC String
 prettyCtx k [] = pure " "
 prettyCtx k ((s , (arg _ x)) ∷ xs) = do
@@ -86,7 +86,6 @@ prettyCtx k ((s , (arg _ x)) ∷ xs) = do
   xs' ← prettyCtx (suc k) xs
   pure ("\n" S.++ s S.++ " : " S.++ x' S.++ "\n\n" S.++ xs') 
  
-
 record YoloState : Set where
  constructor yoloState 
  field
@@ -119,12 +118,12 @@ stepYOLO (suc fuel) ys = do
  
  gptCommand : Maybe (String × String) → List String
  gptCommand nothing =
-    ("/Users/marcin/yolo-agda-gpt/wrapper.py"
-      ∷ "/Users/marcin/yolo-agda-gpt/prompt_template.txt" ∷ ys .ctxString ∷ ys .problemString
+    (wrapperName
+      ∷ promptTemplate ∷ ys .ctxString ∷ ys .problemString
       ∷ "" ∷ "" ∷   [])
  gptCommand (just (prevTerm , prevErr)) =
-       ("/Users/marcin/yolo-agda-gpt/wrapper.py"
-      ∷ "/Users/marcin/yolo-agda-gpt/prompt_template_on_fail.txt" ∷ ys .ctxString ∷ ys .problemString
+       (wrapperName
+      ∷ promptFailTemplate ∷ ys .ctxString ∷ ys .problemString
       ∷ prevTerm ∷ prevErr ∷   [])
  
 module _ (fuel : ℕ) where
@@ -147,87 +146,31 @@ module _ (fuel : ℕ) where
    ctxString ← prettyCtx 1 (ctx)
    tryYOLO holeString ctxString hole hoTy
    
+-- open ≡-Reasoning
 
--- -- -- open ≡-Reasoning
+test0 : (x y : ℕ) → x + y ≡ y + x
+test0 x y = +-comm x y   -- SUCCESS!
 
--- -- test3 : (A B C : Set) → A → (f : A → B) (g : B → C) → C  
--- -- test3 A B C a f g = {!yolo!!}
--- -- --    -- g (f a)
+test3 : (A B C : Set) → A → (f : A → B) (g : B → C) → C
+test3 A B C a f g = g (f a)  -- SUCCESS!
 
--- -- test4 : (A B C : Set) → A → (f : A → A → B) (g : B → B → C) → C  
--- -- test4 A B C a f g = {!yolo! C!} --yolo! C
--- --    -- g (f a a) (f a a)
+test4 : (A B C : Set) → A → (f : A → A → B) (g : B → B → C) → C
+test4 A B C a f g = g (f a a) (f a a) -- SUCCESS!
 
--- -- -- -- -- test6 : (A B C : Set) → A → (f : A → A → B) (g : B → B → C) → C  
--- -- -- -- -- test6 A B C a f g =
--- -- -- -- --    g (f a a) (f a a)
+test6 : (A B C : Set) → A → (f : A → A → B) (g : B → B → C) → C
+test6 A B C a f g = g (f a a) (f a a)  -- SUCCESS!
 
+test7 : (x y z : ℕ) → x + y + z ≡ z + y + x
+test7 x y z = {!yolo! 5 !}
 
-test1 : (x y z : ℕ) → x + y + z ≡ z + y + x 
-test1 x y z = {!!}
+-- The agent returned the following which, interestingly, was only wrong
+-- because of an extra trailing parenthesis:
 
-
--- -- -- -- --   -- trans (+-assoc x y z)
--- -- -- -- --   --    (trans (cong (x +_) (+-comm y z))
--- -- -- -- --   --       (trans (sym (+-assoc x z y))
--- -- -- -- --   --          (trans (cong (_+ y) (+-comm x z))
--- -- -- -- --   --             (trans (+-assoc z x y)
--- -- -- -- --   --                (trans (cong (z +_) (+-comm x y))
--- -- -- -- --   --                   (sym (+-assoc z y x)))))))
--- -- -- -- --    -- yolo! (x + y + z ≡ z + y + x)
--- -- -- -- --   -- trans (+-assoc x y z)
--- -- -- -- --   -- (trans (cong₂  _+_ {x = x} refl (+-comm y z))
--- -- -- -- --   --   (trans (sym (+-assoc x z y))
--- -- -- -- --   --     (trans (cong₂ _+_ (+-comm x z) refl)
--- -- -- -- --   --       (trans (+-assoc z x y)
--- -- -- -- --   --         (trans (cong₂ _+_ {x = z} refl (+-comm x y))
--- -- -- -- --   --           (sym (+-assoc z y x)))))))
-
-
--- -- -- -- -- -- -- trans (+-assoc x y z)
--- -- -- -- -- --   --     (trans
--- -- -- -- -- --   --        (cong (λ n → x + n) (+-comm y z))
--- -- -- -- -- --   --        (trans
--- -- -- -- -- --   --           (sym (+-assoc x z y))
--- -- -- -- -- --   --           (trans
--- -- -- -- -- --   --              (cong (λ n → n + y) (+-comm x z))
--- -- -- -- -- --   --              (trans
--- -- -- -- -- --   --                 (+-assoc z x y)
--- -- -- -- -- --   --                 (trans
--- -- -- -- -- --   --                    (cong (λ n → z + n) (+-comm x y))
--- -- -- -- -- --   --                       (sym (+-assoc z y x)))))))            
-
--- -- -- -- -- -- -- yolo! (x + y + z ≡ z + y + x)
--- -- -- -- -- -- --   -- begin
--- -- -- -- -- -- --   --    x + y + z
--- -- -- -- -- -- --   --  ≡⟨ {!+-comm x (y + z)!} ⟩ -- +-comm x (y + z)
--- -- -- -- -- -- --   --    y + z + x
--- -- -- -- -- -- --   --  ≡⟨ +-assoc y z x ⟩
--- -- -- -- -- -- --   --    y + (z + x)
--- -- -- -- -- -- --   --  ≡⟨ +-comm y (z + x) ⟩
--- -- -- -- -- -- --   --    z + x + y
--- -- -- -- -- -- --   --  ≡⟨ +-assoc z x y ⟩
--- -- -- -- -- -- --   --    z + (x + y)
--- -- -- -- -- -- --   --  ≡⟨ {!+-comm (x + y) z!} ⟩ --  +-comm (x + y) z
--- -- -- -- -- -- --   --    z + y + x
--- -- -- -- -- -- --   --  ∎
-    
-
--- -- -- -- -- -- -- test1' : (x y z : ℕ) → x + (y + z) ≡ z + y + x 
--- -- -- -- -- -- -- test1' x y z =
--- -- -- -- -- -- --    begin
--- -- -- -- -- -- --      (x + (y + z))
--- -- -- -- -- -- --    ≡⟨ +-comm x (y + z) ⟩ -- +-comm x (y + z)
--- -- -- -- -- -- --      (y + z + x)
--- -- -- -- -- -- --    ≡⟨ +-assoc y z x ⟩
--- -- -- -- -- -- --      (y + (z + x))
--- -- -- -- -- -- --    ≡⟨ +-comm y (z + x) ⟩
--- -- -- -- -- -- --      (z + x + y)
--- -- -- -- -- -- --    ≡⟨ +-assoc z x y ⟩
--- -- -- -- -- -- --      (z + (x + y))
--- -- -- -- -- -- --    ≡⟨ cong (z +_) (+-comm x y) ⟩
--- -- -- -- -- -- --      (z + (y + x))
--- -- -- -- -- -- --    ≡⟨ sym (+-assoc z y x) ⟩ -- +-assoc z y x
--- -- -- -- -- -- --      (z + y + x)
--- -- -- -- -- -- --    ∎
-
+-- trans (+-assoc x y z) (
+-- trans (cong (λ n → x + n) (+-comm y z)) (
+-- trans (sym (+-assoc x z y)) (
+-- trans (cong₂ _+_ (+-comm x z) refl) (
+-- trans (+-assoc z x y) (
+-- trans (cong (λ n → z + n) (+-comm x y)) (
+-- sym (+-assoc z y x)
+-- )))))))
