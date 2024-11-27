@@ -2,6 +2,7 @@
 module YOLO where
 
 open import Reflection
+open import Agda.Builtin.Reflection using (formatErrorParts; checkFromStringTC)
 open import Reflection.External
 open import Reflection.AST.DeBruijn
 
@@ -19,6 +20,11 @@ open import Relation.Binary.PropositionalEquality
   
 exeName : String
 exeName = "python3"
+
+-- vvvvvvv !!! EDIT THESE FILE NAMES !!! vvvvvvvv --
+wrapperName = "/home/williamdemeo/git/AI/PROJECTS/aimxxxix/yolo-agda-gpt/wrapper.py"
+promptTemplate = "/home/williamdemeo/git/AI/PROJECTS/aimxxxix/yolo-agda-gpt/prompt_template.txt"
+promptFailTemplate = "/home/williamdemeo/git/AI/PROJECTS/aimxxxix/yolo-agda-gpt/prompt_fail_template.txt"
 
 _<$>_ : ∀ {ℓ ℓ'} {A : Set ℓ} {B : Set ℓ'} → (f : A → B) → TC A → TC B
 f <$> m = do m' ← m ; pure (f m')
@@ -119,12 +125,12 @@ stepYOLO (suc fuel) ys = do
  
  gptCommand : Maybe (String × String) → List String
  gptCommand nothing =
-    ("/Users/marcin/yolo-agda-gpt/wrapper.py"
-      ∷ "/Users/marcin/yolo-agda-gpt/prompt_template.txt" ∷ ys .ctxString ∷ ys .problemString
+    (wrapperName
+      ∷ promptTemplate ∷ ys .ctxString ∷ ys .problemString
       ∷ "" ∷ "" ∷   [])
  gptCommand (just (prevTerm , prevErr)) =
-       ("/Users/marcin/yolo-agda-gpt/wrapper.py"
-      ∷ "/Users/marcin/yolo-agda-gpt/prompt_template_on_fail.txt" ∷ ys .ctxString ∷ ys .problemString
+       (wrapperName
+      ∷ promptFailTemplate ∷ ys .ctxString ∷ ys .problemString
       ∷ prevTerm ∷ prevErr ∷   [])
  
 module _ (fuel : ℕ) where
