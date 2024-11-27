@@ -1,0 +1,18 @@
+I asked you to help me write some Agda expression of specified type in previoous conversation,
+and assume that we are using agda standard-library, not cubicla-agda specific definitions!
+
+term should be in following context:
+{placeholder1}
+
+and it shoould be of type:
+{placeholder2}
+
+you gave me that solution:
+{placeholder3}
+
+but when I tried to typecheck it I am getting following error:
+{placeholder4}
+
+
+Can you plese try to produce correct solution?
+Please, respond ONLY with the term itself, without any other comment!
