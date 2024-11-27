@@ -98,10 +98,6 @@ record YoloState : Set where
   
 open YoloState
 
-catchtc' : {a : Agda.Primitive.Level} {A : Set a} →
-            TC A → (String → TC A) → TC A
-catchtc' = catchTC
-
 stepYOLO : ℕ → YoloState → TC (Maybe YoloState)
 stepYOLO zero _ = pure nothing
 stepYOLO (suc fuel) ys = do
