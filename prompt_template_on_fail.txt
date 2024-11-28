@@ -10,7 +10,7 @@ and it shoould be of type:
 you proposed the solution:
 {placeholder3}
 
-but when I type-check that I get following error:
+but when I type-check that I get the following error:
 {placeholder4}
 
 Can you plese try again to produce the correct solution?
