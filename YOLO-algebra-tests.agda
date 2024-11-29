@@ -21,7 +21,29 @@ module TEST1 where -----------------------------------------------------------
   contrapositive f v a = v (f a)
 
   test-contrapositive : (A → B) → (¬ B → ¬ A)
-  test-contrapositive f v a = v (f a)   -- SUCCESS! (all models)
+  test-contrapositive f v a = v (f a)
+
+  -- SUCCESS! (all models)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module TEST2 where -----------------------------------------------------------
 
   -- What if we change notation?
 
@@ -34,11 +56,34 @@ module TEST1 where -----------------------------------------------------------
   contrapositive~ f v a = v (f a)
 
   test-contrapositive~ : (A → B) → (~ B → ~ A)
-  test-contrapositive~ f v a = v (f a)  -- SUCCESS! models: gpt-4o
-                                        -- FAIL     models: gpt-4o-mini
+  test-contrapositive~ f v a = {!!}
 
 
-module TEST2 where --------------------------------------------------------------
+  -- SUCCESS! models: gpt-4o
+  -- FAIL     models: gpt-4o-mini
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module TEST3 where --------------------------------------------------------------
 
   open import Data.Product      using ( _,_ ; _×_ )
                                 renaming ( proj₁ to fst ; proj₂ to snd )
@@ -83,7 +128,25 @@ module TEST2 where -------------------------------------------------------------
   -- ≡-components refl refl = ?          -- (no change observed)
 
 
-module TEST3 where -----------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module TEST4 where -----------------------------------------------------------------------
 
   open import Data.Nat
   open import Data.Nat.Properties
@@ -110,7 +173,25 @@ module TEST3 where -------------------------------------------------------------
                                                      -- FAIL     models: gpt-4o, gpt-4o-mini
 
 
-module TEST4 where -----------------------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module TEST5 where -----------------------------------------------------------------------
 
   open import Data.Nat
   open import Relation.Binary.PropositionalEquality
@@ -146,7 +227,25 @@ module TEST4 where -------------------------------------------------------------
 
 
 
-module TEST5 where -----------------------------------------------------------
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+module TEST6 where -----------------------------------------------------------
 
   open import Data.Nat
   open import Data.Nat.Properties
