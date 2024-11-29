@@ -1,7 +1,7 @@
 from openai import OpenAI
 
 # Store your OpenAI API key here
-API_KEY = ?? 
+API_KEY = ??
 
 # List of strings to remove from the response
 STRINGS_TO_REMOVE = [ "agda", "```"]

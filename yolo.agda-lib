@@ -1,4 +1,4 @@
 name: yolo
 include: .
-depend: standard-library-2.2
+depend: standard-library
 flags:
