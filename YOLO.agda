@@ -149,19 +149,26 @@ module _ (fuel : ℕ) where
 -- open ≡-Reasoning
 
 test0 : (x y : ℕ) → x + y ≡ y + x
-test0 x y = +-comm x y   -- SUCCESS!
+test0 x y = +-comm x y                 -- SUCCESS! models: gpt-4o, o1-preview
+                                       -- FAIL     models: gpt-4o-mini
 
-test3 : (A B C : Set) → A → (f : A → B) (g : B → C) → C
-test3 A B C a f g = g (f a)  -- SUCCESS!
+test1 : (A B C : Set) → A → (f : A → B) (g : B → C) → C
+test1 A B C a f g = g (f a)            -- SUCCESS! model: gpt-4o-mini
 
-test4 : (A B C : Set) → A → (f : A → A → B) (g : B → B → C) → C
-test4 A B C a f g = g (f a a) (f a a) -- SUCCESS!
+test2 : (A B C : Set) → A → (f : A → A → B) (g : B → B → C) → C
+test2 A B C a f g = g (f a a) (f a a)  -- SUCCESS! model: gpt-4o-mini
 
-test6 : (A B C : Set) → A → (f : A → A → B) (g : B → B → C) → C
-test6 A B C a f g = g (f a a) (f a a)  -- SUCCESS!
+test3 : (x y z : ℕ) → x + y + z ≡ z + y + x
+test3 x y z = trans (+-assoc x y z)
+               (trans (cong (_+_ x) (+-comm y z))
+                (trans (sym (+-assoc x z y))
+                 (trans (cong₂ _+_ (+-comm x z) refl)
+                  (trans (+-assoc z x y)
+                   (trans (cong (_+_ z) (+-comm x y)) (sym (+-assoc z y x)))))))
+                                      -- SUCCESS! model: o1-preview
+                                      -- FAIL     model: gpt-4o, gpt-4o-mini
 
-test7 : (x y z : ℕ) → x + y + z ≡ z + y + x
-test7 x y z = {!yolo! 5 !}
+-- yolo! 5
 
 -- The agent returned the following which, interestingly, was only wrong
 -- because of an extra trailing parenthesis:
