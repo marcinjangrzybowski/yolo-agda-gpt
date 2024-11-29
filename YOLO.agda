@@ -14,6 +14,7 @@ open import Data.Product
 open import Data.String as S
 open import Data.List as L
 
+open import Agda.Builtin.Reflection using (getCurrentPathTC)
 open import Relation.Binary.PropositionalEquality
   -- using (_≡_; refl; sym; cong; module ≡-Reasoning)
   
@@ -102,9 +103,9 @@ open YoloState
 stepYOLO : ℕ → YoloState → TC (Maybe YoloState)
 stepYOLO zero _ = pure nothing
 stepYOLO (suc fuel) ys = do
-  gptResult ← runCmdTC (cmdSpec exeName
-        (gptCommand  (ys .prevResult))
-       "")
+  fileName ← getCurrentPathTC
+  debugPrint "yolo" 0 L.[ strEtt fileName ]
+  gptResult ← runCmdTC (cmdSpec exeName (gptCommand  (ys .prevResult)) "")
   just err ←
      catchTC
         (checkFromStringTC gptResult (ys .holeType) >>= λ y →  (unify y (ys .hole)) >> pure nothing)
@@ -164,7 +165,7 @@ module _ (fuel : ℕ) where
 
 
 test1 : (x y z : ℕ) → x + y + z ≡ z + y + x 
-test1 x y z = {!!}
+test1 x y z = {!just!}
 
 
 -- -- -- -- --   -- trans (+-assoc x y z)
